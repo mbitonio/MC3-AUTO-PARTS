@@ -1,18 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MC3 Admin Login</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
 <div class="login-box">
-    <h2>MC3 Admin Login</h2>
-    <input type="password" id="password" placeholder="Enter password">
+    <h2>Admin Login</h2>
+    <input type="password" id="password" placeholder="Enter Password">
     <button onclick="login()">Login</button>
-    <p id="msg"></p>
 </div>
 
 <script>
@@ -21,7 +19,7 @@ function login() {
     if (pass === "mc3admin0211") {
         window.location.href = "panel.html";
     } else {
-        document.getElementById("msg").textContent = "Incorrect password.";
+        alert("Incorrect password");
     }
 }
 </script>
