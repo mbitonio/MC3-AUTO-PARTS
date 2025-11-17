@@ -1,52 +1,66 @@
-let themeBtn = document.getElementById("themeToggle");
-if (themeBtn) {
-    themeBtn.onclick = () => {
-        document.body.classList.toggle("dark");
-        localStorage.setItem("mc3theme", document.body.classList.contains("dark"));
-    };
-    if (localStorage.getItem("mc3theme") === "true") {
-        document.body.classList.add("dark");
-    }
-}
+let inventory = [];
 
 async function loadInventory() {
     let res = await fetch("inventory.json");
-    let data = await res.json();
-    return data;
+    inventory = await res.json();
+    displayInventory();
+    displayAdmin();
 }
 
-function renderInventory(items) {
-    let div = document.getElementById("inventory");
-    div.innerHTML = "";
+function displayInventory() {
+    let body = document.getElementById("inventoryBody");
+    if (!body) return;
 
-    items.forEach(item => {
-        div.innerHTML += `
-        <div class="item-card">
-            <h3>${item.code} – ${item.brand}</h3>
-            <p><b>Type:</b> ${item.type}</p>
-            <p><b>Fitment:</b> ${item.fitment}</p>
-            <p><b>Stock:</b> ${item.stock} 
-                ${item.stock <= 5 ? "<span class='low-stock'>(LOW!)</span>" : ""}
-            </p>
-            <p><b>Wholesale:</b> ₱${item.wholesale}</p>
-            <p><b>Retail:</b> ₱${item.retail}</p>
-        </div>`;
+    body.innerHTML = "";
+    inventory.forEach(item => {
+        body.innerHTML += `
+        <tr>
+            <td>${item.code}</td>
+            <td>${item.type}</td>
+            <td>${item.brand}</td>
+            <td>${item.fitment}</td>
+            <td>${item.stock}</td>
+            <td>₱${item.retail}</td>
+            <td>₱${item.wholesale}</td>
+        </tr>`;
     });
 }
 
-if (document.getElementById("inventory")) {
-    loadInventory().then(data => {
-        renderInventory(data);
+function displayAdmin() {
+    let body = document.getElementById("adminBody");
+    if (!body) return;
 
-        document.getElementById("search").onkeyup = (e) => {
-            let q = e.target.value.toLowerCase();
-            let filtered = data.filter(i =>
-                i.code.toLowerCase().includes(q) ||
-                i.brand.toLowerCase().includes(q) ||
-                i.type.toLowerCase().includes(q) ||
-                i.fitment.toLowerCase().includes(q)
-            );
-            renderInventory(filtered);
-        };
+    body.innerHTML = "";
+    inventory.forEach((item, i) => {
+        body.innerHTML += `
+        <tr>
+            <td>${item.code}</td>
+            <td>${item.type}</td>
+            <td>${item.brand}</td>
+            <td><textarea onchange="edit(${i}, 'fitment', this.value)">${item.fitment}</textarea></td>
+            <td><input type="number" value="${item.stock}" onchange="edit(${i}, 'stock', this.value)"></td>
+            <td><input type="number" value="${item.retail}" onchange="edit(${i}, 'retail', this.value)"></td>
+            <td><input type="number" value="${item.wholesale}" onchange="edit(${i}, 'wholesale', this.value)"></td>
+            <td><button onclick="removeItem(${i})">Delete</button></td>
+        </tr>`;
     });
 }
+
+function edit(i, field, value) {
+    inventory[i][field] = value;
+}
+
+function removeItem(i) {
+    inventory.splice(i, 1);
+    displayAdmin();
+}
+
+function downloadJSON() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(inventory, null, 4));
+    const link = document.createElement("a");
+    link.href = dataStr;
+    link.download = "inventory.json";
+    link.click();
+}
+
+loadInventory();
