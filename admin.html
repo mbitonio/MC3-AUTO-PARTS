@@ -1,30 +1,25 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8">
 <title>MC3 Admin Login</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="loginWrap">
   <h2>MC3 ADMIN</h2>
-  <input id="pw" type="password" placeholder="Enter admin password" />
-  <div>
-    <button class="btn" id="loginBtn">Login</button>
-  </div>
-  <p class="note">Use your admin password to access inventory editor.</p>
+  <input id="pw" type="password" placeholder="Enter admin password">
+  <button class="btn" id="loginBtn">Login</button>
+  <p class="note">Password required to access Admin Panel</p>
 </div>
 
 <script>
-document.getElementById('loginBtn').addEventListener('click', ()=> {
-  const p = document.getElementById('pw').value.trim();
-  if (p === 'mc3admin0211') {
-    location.href = 'admin_panel.html';
-  } else {
-    alert('Incorrect password');
-  }
-});
+document.getElementById("loginBtn").onclick = ()=>{
+ let p=document.getElementById("pw").value.trim();
+ if(p==="mc3admin0211") location.href="admin_panel.html";
+ else alert("Incorrect Password");
+};
 </script>
+
 </body>
 </html>
