@@ -3,22 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MC3 Inventory</title>
+    <title>MC3 AUTO PARTS – Inventory</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<div class="top-bar">
-    <h1>MC3 INVENTORY SYSTEM</h1>
-    <button id="themeToggle">🌙/☀️</button>
-</div>
+<header>
+    <h1>MC3 AUTO PARTS</h1>
+    <p>Online Inventory • Cabin / Air / Oil Filters</p>
+</header>
 
-<div class="search-container">
-    <input type="text" id="search" placeholder="Search Code / Brand / Type / Fitment">
-</div>
+<section class="search-box">
+    <input type="text" id="searchInput" placeholder="Search Code, Brand, Model, Type…">
+</section>
 
-<div id="inventory"></div>
+<section>
+    <table id="inventoryTable">
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Type</th>
+                <th>Brand</th>
+                <th>Fitment</th>
+                <th>Stock</th>
+                <th>Retail ₱</th>
+                <th>Wholesale ₱</th>
+            </tr>
+        </thead>
+        <tbody id="inventoryBody"></tbody>
+    </table>
+</section>
+
+<footer>
+    <p>© 2025 MC3 AUTO PARTS • Direct Import • High Quality • Low Price</p>
+</footer>
 
 <script src="script.js"></script>
+
 </body>
 </html>
