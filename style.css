@@ -1,66 +1,54 @@
-:root {
-    --bg: #ffffff;
-    --text: #000000;
-    --card: #f2f2f2;
-    --accent: #d40000;
-}
-
-body.dark {
-    --bg: #111111;
-    --text: #ffffff;
-    --card: #1c1c1c;
-    --accent: #ff3b3b;
-}
-
 body {
-    background: var(--bg);
-    color: var(--text);
-    margin: 0;
-    font-family: Arial, sans-serif;
-}
-
-.top-bar {
-    padding: 15px;
-    background: var(--accent);
+    font-family: Arial;
+    background: #0d1117;
     color: white;
-    display: flex;
-    justify-content: space-between;
+    margin: 0;
+    padding: 0;
 }
 
-.search-container {
-    padding: 10px;
-}
-
-input {
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
-}
-
-.item-card {
-    background: var(--card);
-    margin: 10px;
-    padding: 15px;
-    border-left: 5px solid var(--accent);
-}
-
-.low-stock {
-    color: red;
-    font-weight: bold;
-}
-
-.login-box {
-    width: 90%;
-    max-width: 350px;
-    margin: 100px auto;
+header {
+    text-align: center;
     padding: 20px;
-    background: var(--card);
+    background: #161b22;
+    margin-bottom: 10px;
+}
+
+.search {
+    padding: 10px;
     text-align: center;
 }
 
-.btn {
-    padding: 10px 15px;
-    background: var(--accent);
+input {
+    width: 90%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border-bottom: 1px solid #30363d;
+    padding: 10px;
+    text-align: left;
+}
+
+button {
+    padding: 6px 10px;
+    background: #238636;
+    border: none;
     color: white;
-    text-decoration: none;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.save-btn {
+    margin: 20px;
+    padding: 15px;
+    width: calc(100% - 40px);
+    background: #2ea043;
+    font-size: 18px;
 }
