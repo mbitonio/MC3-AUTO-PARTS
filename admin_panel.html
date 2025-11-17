@@ -1,0 +1,211 @@
+    // continue from previous fetch...
+    fetch('inventory.json')
+      .then(r => r.json())
+      .then(j => { inventory = j; saveToLocal(false); renderAdmin(); })
+      .catch(e => { /* no inventory.json found, use default */ renderAdmin(); });
+  }
+}
+
+loadFromStorage();
+
+// ---------- RENDER ADMIN TABLE ----------
+function renderAdmin() {
+  const body = document.getElementById('adminBody');
+  body.innerHTML = '';
+  inventory.forEach((it, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(it.code)}</td>
+      <td>${escapeHtml(it.type)}</td>
+      <td>${escapeHtml(it.brand)}</td>
+      <td class="fitment-cell">${escapeHtml(it.fitment)}</td>
+      <td>${escapeHtml(String(it.stock))}</td>
+      <td>₱${escapeHtml(String(it.retail))}</td>
+      <td>₱${escapeHtml(String(it.wholesale))}</td>
+      <td><button class="btn btn-red" onclick="selectRow(${idx})">Edit</button></td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+// ---------- SAFETY: escape HTML ----------
+function escapeHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/[&<>"'`]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c]));
+}
+
+// ---------- SELECT ROW FOR EDIT ----------
+function selectRow(i) {
+  editingIndex = i;
+  const it = inventory[i];
+  document.getElementById('editorForm').style.display = 'block';
+  document.getElementById('editorNotice').style.display = 'none';
+  document.getElementById('e_code').value = it.code || '';
+  document.getElementById('e_type').value = it.type || '';
+  document.getElementById('e_brand').value = it.brand || '';
+  document.getElementById('e_fitment').value = it.fitment || '';
+  document.getElementById('e_stock').value = it.stock || 0;
+  document.getElementById('e_retail').value = it.retail || 0;
+  document.getElementById('e_wholesale').value = it.wholesale || 0;
+}
+
+// ---------- SAVE ROW FROM EDITOR ----------
+document.getElementById('saveRow').addEventListener('click', () => {
+  if (editingIndex === null) return alert('No row selected');
+  const idx = editingIndex;
+  inventory[idx].code = document.getElementById('e_code').value.trim();
+  inventory[idx].type = document.getElementById('e_type').value.trim();
+  inventory[idx].brand = document.getElementById('e_brand').value.trim();
+  inventory[idx].fitment = document.getElementById('e_fitment').value.trim();
+  inventory[idx].stock = Number(document.getElementById('e_stock').value) || 0;
+  inventory[idx].retail = Number(document.getElementById('e_retail').value) || 0;
+  inventory[idx].wholesale = Number(document.getElementById('e_wholesale').value) || 0;
+  editingIndex = null;
+  document.getElementById('editorForm').style.display = 'none';
+  document.getElementById('editorNotice').style.display = 'block';
+  renderAdmin();
+  saveToLocal();
+});
+
+// ---------- DELETE ROW ----------
+document.getElementById('delRow').addEventListener('click', () => {
+  if (editingIndex === null) return;
+  if (!confirm('Delete this row?')) return;
+  inventory.splice(editingIndex, 1);
+  editingIndex = null;
+  document.getElementById('editorForm').style.display = 'none';
+  document.getElementById('editorNotice').style.display = 'block';
+  renderAdmin();
+  saveToLocal();
+});
+
+// ---------- ADD ITEM ----------
+function addItem() {
+  const newItem = { code:'', type:'', brand:'', fitment:'', stock:0, retail:0, wholesale:0 };
+  inventory.unshift(newItem); // add to top
+  renderAdmin();
+  selectRow(0);
+  saveToLocal();
+}
+
+// ---------- SAVE TO LOCAL (and optionally re-render) ----------
+function saveToLocal(showAlert=true) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory));
+  if (showAlert) alert('Saved to browser storage.');
+}
+
+// ---------- DOWNLOAD JSON (for manual upload to GitHub) ----------
+function downloadJSON() {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(inventory, null, 2));
+  const a = document.createElement('a');
+  a.href = dataStr;
+  a.download = 'inventory.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+// ---------- EXPORT XLSX using SheetJS ----------
+function exportXLSX() {
+  /* create worksheet from inventory */
+  const ws_data = [
+    ['code','type','brand','fitment','stock','retail','wholesale']
+  ];
+  inventory.forEach(it => ws_data.push([it.code, it.type, it.brand, it.fitment, it.stock, it.retail, it.wholesale]));
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
+  XLSX.writeFile(wb, 'mc3_inventory.xlsx');
+}
+
+// ---------- IMPORT XLSX ----------
+document.getElementById('fileImport').addEventListener('change', (evt) => {
+  const f = evt.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = (e) => {
+    const data = new Uint8Array(e.target.result);
+    const wb = XLSX.read(data, {type:'array'});
+    const first = wb.Sheets[wb.SheetNames[0]];
+    const arr = XLSX.utils.sheet_to_json(first, {header:1, defval:''});
+    // expect header row
+    const header = arr[0].map(h => String(h).toLowerCase());
+    const out = [];
+    for (let i=1;i<arr.length;i++) {
+      if (!arr[i] || arr[i].length===0) continue;
+      const row = arr[i];
+      const obj = {
+        code: row[header.indexOf('code')] || '',
+        type: row[header.indexOf('type')] || '',
+        brand: row[header.indexOf('brand')] || '',
+        fitment: row[header.indexOf('fitment')] || '',
+        stock: Number(row[header.indexOf('stock')] || 0),
+        retail: Number(row[header.indexOf('retail')] || 0),
+        wholesale: Number(row[header.indexOf('wholesale')] || 0)
+      };
+      out.push(obj);
+    }
+    if (out.length>0) {
+      if (confirm('Replace inventory with imported file? OK = replace, Cancel = append')) {
+        inventory = out;
+      } else {
+        inventory = out.concat(inventory);
+      }
+      renderAdmin();
+      saveToLocal();
+      alert('Import complete: ' + out.length + ' rows');
+    } else alert('No rows found in file.');
+  };
+  r.readAsArrayBuffer(f);
+});
+
+// ---------- SORT & SEARCH (admin) ----------
+document.getElementById('searchAdmin').addEventListener('input', applyAdminFilters);
+document.getElementById('sortAdmin').addEventListener('change', applyAdminFilters);
+
+function applyAdminFilters() {
+  const q = document.getElementById('searchAdmin').value.trim().toLowerCase();
+  const sort = document.getElementById('sortAdmin').value;
+  let items = inventory.filter(it => {
+    if (!q) return true;
+    const txt = (it.code + ' ' + it.brand + ' ' + it.type + ' ' + it.fitment).toLowerCase();
+    return txt.includes(q);
+  });
+  if (sort === 'code') items.sort((a,b)=> a.code.localeCompare(b.code));
+  if (sort === 'brand') items.sort((a,b)=> a.brand.localeCompare(b.brand));
+  if (sort === 'type') items.sort((a,b)=> a.type.localeCompare(b.type));
+  if (sort === 'stock_desc') items.sort((a,b)=> Number(b.stock)-Number(a.stock));
+  // render filtered list to table body
+  const body = document.getElementById('adminBody');
+  body.innerHTML = '';
+  items.forEach((it, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(it.code)}</td>
+      <td>${escapeHtml(it.type)}</td>
+      <td>${escapeHtml(it.brand)}</td>
+      <td class="fitment-cell">${escapeHtml(it.fitment)}</td>
+      <td>${escapeHtml(String(it.stock))}</td>
+      <td>₱${escapeHtml(String(it.retail))}</td>
+      <td>₱${escapeHtml(String(it.wholesale))}</td>
+      <td><button class="btn" onclick="selectRow(${inventory.indexOf(it)})">Edit</button></td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+// ---------- LOAD DEFAULT ----------
+function loadDefault() {
+  if (!confirm('Load default inventory and overwrite current?')) return;
+  inventory = defaultInventory.slice();
+  renderAdmin();
+  saveToLocal();
+  alert('Default inventory loaded.');
+}
+
+// ---------- INITIAL RENDER ----------
+renderAdmin();
+
+</script>
+</body>
+</html>
