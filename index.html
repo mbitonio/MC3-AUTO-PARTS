@@ -42,7 +42,7 @@
         border: 1px solid #444;
         color: #fff;
     }
-    .save-btn {
+    .btn {
         background: #00ff99;
         color: #000;
         border: none;
@@ -50,7 +50,11 @@
         font-weight: bold;
         border-radius: 5px;
         cursor: pointer;
-        margin-top: 20px;
+        margin: 10px 5px 20px 0;
+    }
+    .btn-red {
+        background: #ff4444;
+        color: white;
     }
 </style>
 </head>
@@ -60,6 +64,9 @@
 <h3>Online Inventory • Cabin / Air / Oil Filters</h3>
 
 <input type="text" id="search" placeholder="Search Code, Brand, Model, Type…">
+
+<button class="btn" onclick="addItem()">ADD ITEM</button>
+<button class="btn" onclick="saveInventory()">SAVE CHANGES</button>
 
 <table id="inventoryTable">
     <thead>
@@ -71,16 +78,15 @@
             <th>Stock</th>
             <th>Retail ₱</th>
             <th>Wholesale ₱</th>
+            <th>Delete</th>
         </tr>
     </thead>
     <tbody id="tableBody"></tbody>
 </table>
 
-<button class="save-btn" onclick="saveInventory()">SAVE CHANGES</button>
-
 <script>
 // ------------------------------
-// INVENTORY LIST (Editable)
+// DEFAULT INVENTORY
 // ------------------------------
 let inventory = [
     {
@@ -121,11 +127,45 @@ let inventory = [
     }
 ];
 
-// Load saved data
+// LOAD SAVED VERSION
 if (localStorage.getItem("mc3inventory")) {
     inventory = JSON.parse(localStorage.getItem("mc3inventory"));
 }
 
+// UPDATE INVENTORY VALUES
+function update(i, key, value) {
+    inventory[i][key] = value;
+}
+
+// DELETE ITEM
+function deleteItem(i) {
+    if (confirm("Delete this item?")) {
+        inventory.splice(i, 1);
+        renderTable();
+    }
+}
+
+// ADD ITEM BUTTON
+function addItem() {
+    inventory.push({
+        code: "",
+        type: "",
+        brand: "",
+        fitment: "",
+        stock: 0,
+        retail: 0,
+        wholesale: 0
+    });
+    renderTable();
+}
+
+// SAVE BUTTON
+function saveInventory() {
+    localStorage.setItem("mc3inventory", JSON.stringify(inventory));
+    alert("Inventory Saved!");
+}
+
+// RENDER TABLE
 function renderTable() {
     const tbody = document.getElementById("tableBody");
     tbody.innerHTML = "";
@@ -133,35 +173,27 @@ function renderTable() {
     inventory.forEach((item, i) => {
         tbody.innerHTML += `
         <tr>
-            <td>${item.code}</td>
-            <td>${item.type}</td>
-            <td>${item.brand}</td>
+            <td><input type="text" value="${item.code}" onchange="update(${i}, 'code', this.value)"></td>
+            <td><input type="text" value="${item.type}" onchange="update(${i}, 'type', this.value)"></td>
+            <td><input type="text" value="${item.brand}" onchange="update(${i}, 'brand', this.value)"></td>
             <td><input type="text" value="${item.fitment}" onchange="update(${i}, 'fitment', this.value)"></td>
             <td><input type="number" value="${item.stock}" onchange="update(${i}, 'stock', this.value)"></td>
             <td><input type="number" value="${item.retail}" onchange="update(${i}, 'retail', this.value)"></td>
             <td><input type="number" value="${item.wholesale}" onchange="update(${i}, 'wholesale', this.value)"></td>
+            <td><button class="btn-red" onclick="deleteItem(${i})">X</button></td>
         </tr>
         `;
     });
 }
 
-function update(i, key, value) {
-    inventory[i][key] = value;
-}
-
-function saveInventory() {
-    localStorage.setItem("mc3inventory", JSON.stringify(inventory));
-    alert("Inventory saved successfully!");
-}
-
-// Search function
+// FIXED SEARCH FUNCTION
 document.getElementById("search").addEventListener("keyup", () => {
-    let filter = document.getElementById("search").value.toUpperCase();
+    let filter = document.getElementById("search").value.toLowerCase();
     let rows = document.querySelectorAll("#inventoryTable tbody tr");
 
     rows.forEach(row => {
-        let txt = row.innerText.toUpperCase();
-        row.style.display = txt.includes(filter) ? "" : "none";
+        let text = row.innerText.toLowerCase();
+        row.style.display = text.includes(filter) ? "" : "none";
     });
 });
 
