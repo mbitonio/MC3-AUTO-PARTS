@@ -1,11 +1,38 @@
 [
     {
-        "code": "7803A112",
-        "type": "CABIN",
+        "code": "1500A608",
+        "type": "AIR",
         "brand": "MITSUBISHI",
-        "fitment": "Xpander / Mirage / Lancer",
-        "stock": 120,
-        "wholesale": 120,
-        "retail": 180
+        "fitment": "Montero Sport / Pajero Sport III – 2016–2021 | Strada 2018–Present | L200 / Triton 2016–Present",
+        "stock": 46,
+        "retail": 150,
+        "wholesale": 130
+    },
+    {
+        "code": "1500A617",
+        "type": "AIR",
+        "brand": "MITSUBISHI",
+        "fitment": "Mirage G4 2012–2021 | Mirage Hatchback 2012–2019",
+        "stock": 20,
+        "retail": 98,
+        "wholesale": 90
+    },
+    {
+        "code": "17801-0L040",
+        "type": "AIR",
+        "brand": "TOYOTA",
+        "fitment": "Fortuner 2015–Present | Innova 2016–Present | Hilux 2015–Present",
+        "stock": 28,
+        "retail": 162.50,
+        "wholesale": 150
+    },
+    {
+        "code": "17801-0Y040",
+        "type": "AIR",
+        "brand": "TOYOTA",
+        "fitment": "Mirage 2013–2019 | Sienta 2016–2019 | Mirage G4 2013–2019 | Vios 2013–2019 | Yaris 2014–2019",
+        "stock": 0,
+        "retail": 105,
+        "wholesale": 95
     }
 ]
