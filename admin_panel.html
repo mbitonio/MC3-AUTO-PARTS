@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>MC3 Admin Panel</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>MC3 ADMIN PANEL</h1>
+    <p class="sub">Editable Inventory — Import / Export / Save</p>
+  </div>
+  <div class="actions">
+    <a class="btn" href="index.html">View Public</a>
+  </div>
+</header>
+
+<section class="container grid">
+  <div class="left">
+    <div class="toolRow">
+      <input id="searchAdmin" placeholder="Search code / brand / fitment / type…" />
+      <select id="sortAdmin">
+        <option value="">Sort — None</option>
+        <option value="code">Code A→Z</option>
+        <option value="brand">Brand A→Z</option>
+        <option value="type">Type A→Z</option>
+        <option value="stock_desc">Stock High→Low</option>
+      </select>
+    </div>
+
+    <div class="toolRow">
+      <button class="btn" onclick="addItem()">Add Item</button>
+      <button class="btn" onclick="saveToLocal()">Save (local)</button>
+      <button class="btn" onclick="downloadJSON()">Download JSON</button>
+      <button class="btn" onclick="exportXLSX()">Export XLSX</button>
+      <label class="btn" for="fileImport">Import .xlsx</label>
+      <input id="fileImport" type="file" accept=".xlsx,.xls" style="display:none" />
+      <button class="btn" onclick="loadDefault()">Load Default (reset)</button>
+    </div>
+
+    <div class="tableWrap">
+      <table id="adminTable">
+        <thead>
+          <tr>
+            <th>Code</th><th>Type</th><th>Brand</th><th>Fitment</th><th>Stock</th><th>Retail</th><th>Wholesale</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="adminBody"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <aside class="right" id="editorPanel">
+    <h3>Editor</h3>
+    <div id="editorNotice">Select a row to edit or Add New.</div>
+    <div id="editorForm" style="display:none">
+      <label>Code</label><input id="e_code" />
+      <label>Type</label><input id="e_type" />
+      <label>Brand</label><input id="e_brand" />
+      <label>Fitment</label><textarea id="e_fitment"></textarea>
+      <label>Stock</label><input id="e_stock" type="number" />
+      <label>Retail ₱</label><input id="e_retail" type="number" />
+      <label>Wholesale ₱</label><input id="e_wholesale" type="number" />
+      <div style="margin-top:10px">
+        <button class="btn" id="saveRow">Save Row</button>
+        <button class="btn btn-red" id="delRow">Delete Row</button>
+      </div>
+    </div>
+  </aside>
+</section>
+
+<footer class="footer">MC3 AUTO PARTS — Admin Panel</footer>
+
+<!-- XLSX library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+// --------------------- CORE ---------------------
+const STORAGE_KEY = 'mc3inventory_online';
+let inventory = [];
+let editingIndex = null;
+
+// default inventory (same as public default)
+const defaultInventory = [
+  {"code":"MR398288","type":"CABIN","brand":"MITSUBISHI","fitment":"(Lancer 2002-2007) (Outlander 2003-2006) (Grandis 2003-2011)","stock":10,"retail":136.5,"wholesale":126},
+  {"code":"87139-0N010","type":"CABIN","brand":"TOYOTA","fitment":"(Hiace Commuter 2004-present) (Hiace Grandia 2004-present) (GL Grandia Tourer)","stock":20,"retail":65,"wholesale":60},
+  {"code":"17801-0L040","type":"AIR","brand":"TOYOTA","fitment":"(Fortuner 2015–present) (Innova 2016–present) (Hilux 2015–present)","stock":28,"retail":162.5,"wholesale":150},
+  {"code":"17801-BZ100","type":"AIR","brand":"TOYOTA","fitment":"(Wigo 2014-2017) (Agya 2013-2017)","stock":20,"retail":111,"wholesale":93.75},
+  {"code":"1500A608","type":"AIR","brand":"MITSUBISHI","fitment":"(Montero 2016-2021) (Strada 2018-present) (L200/Triton 2016-present)","stock":46,"retail":150,"wholesale":130},
+  {"code":"17801-0Y040","type":"AIR","brand":"TOYOTA","fitment":"(Mirage 2013-2019) (Sienta 2016-2019) (Vios 2013-2019) (Yaris 2014-2019)","stock":0,"retail":105,"wholesale":95},
+  {"code":"1500A617","type":"AIR","brand":"MITSUBISHI","fitment":"(Mirage G4 2012-2021) (Mirage Hatchback 2012-2019)","stock":20,"retail":98,"wholesale":90},
+  {"code":"7850A002","type":"CABIN","brand":"MITSUBISHI","fitment":"(Mirage 2014–present) (Mirage G4 2014–present)","stock":10,"retail":77,"wholesale":65},
+  {"code":"7803A112","type":"CABIN","brand":"MITSUBISHI","fitment":"(Montero 2016–Up) (Strada 2015–2022) (L200 2015–2022)","stock":20,"retail":130,"wholesale":120},
+  {"code":"97133-2E210","type":"AIR","brand":"HYUNDAI","fitment":"(Accent 2011-2017) (Tucson 2006-2014) (Veloster 2011-2017) (Elantra 2006-2010) (i30 2007-2011) (Forte 2009-2013)","stock":10,"retail":98,"wholesale":84}
+];
+
+function loadFromStorage() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) {
+    try { inventory = JSON.parse(raw); return; } catch(e){ inventory = defaultInventory.slice(); }
+  } else {
+    // also try to fetch inventory.json if uploaded to repo root (optional)
+    fetch
