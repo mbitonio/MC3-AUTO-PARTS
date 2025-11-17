@@ -6,21 +6,21 @@
 <style>
     body {
         font-family: Arial;
-        background: #111;
+        background: #0f0f0f;
         color: #fff;
         padding: 20px;
     }
-    h2 { margin-bottom: 10px; }
+    h1, h3 { text-align: center; }
     table {
         width: 100%;
         border-collapse: collapse;
         margin-top: 15px;
         background: #1b1b1b;
+        font-size: 15px;
     }
     th, td {
         border: 1px solid #333;
         padding: 8px;
-        text-align: left;
     }
     th {
         background: #333;
@@ -33,29 +33,32 @@
         color: #fff;
         border: 1px solid #444;
     }
-    .save-btn {
-        background: #0f0;
-        padding: 8px 14px;
-        border: none;
-        cursor: pointer;
-        color: #000;
-        font-weight: bold;
-        border-radius: 5px;
-    }
     #search {
         width: 100%;
         padding: 10px;
         margin-bottom: 10px;
-        font-size: 15px;
+        font-size: 16px;
         background: #222;
         border: 1px solid #444;
-        color: white;
+        color: #fff;
+    }
+    .save-btn {
+        background: #00ff99;
+        color: #000;
+        border: none;
+        padding: 12px 18px;
+        font-weight: bold;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 20px;
     }
 </style>
 </head>
 <body>
 
-<h2>MC3 AUTO PARTS — Editable Inventory</h2>
+<h1>MC3 AUTO PARTS</h1>
+<h3>Online Inventory • Cabin / Air / Oil Filters</h3>
+
 <input type="text" id="search" placeholder="Search Code, Brand, Model, Type…">
 
 <table id="inventoryTable">
@@ -70,55 +73,55 @@
             <th>Wholesale ₱</th>
         </tr>
     </thead>
-    <tbody id="tableBody">
-    </tbody>
+    <tbody id="tableBody"></tbody>
 </table>
 
 <button class="save-btn" onclick="saveInventory()">SAVE CHANGES</button>
 
 <script>
-// ---------------------------
-// INVENTORY DATA (EDIT HERE)
-// ---------------------------
+// ------------------------------
+// INVENTORY LIST (Editable)
+// ------------------------------
 let inventory = [
     {
         code: "1500A608",
         type: "AIR",
         brand: "MITSUBISHI",
-        fitment: "Montero Sport / Pajero Sport III (2016–2021), Strada 2018–Present, L200/Triton 2016–Present",
-        stock: 46, retail: 150, wholesale: 130
+        fitment: "Montero Sport 2016–2021 | Strada 2018–Present | L200/Triton 2016–Present",
+        stock: 46,
+        retail: 150,
+        wholesale: 130
     },
     {
         code: "1500A617",
         type: "AIR",
         brand: "MITSUBISHI",
-        fitment: "Mirage G4 2012–2021, Mirage Hatchback 2012–2019",
-        stock: 20, retail: 98, wholesale: 90
+        fitment: "Mirage G4 2012–2021 | Mirage Hatchback 2012–2019",
+        stock: 20,
+        retail: 98,
+        wholesale: 90
     },
     {
         code: "17801-0L040",
         type: "AIR",
         brand: "TOYOTA",
-        fitment: "Fortuner 2015–Present, Innova 2016–Present, Hilux 2015–Present",
-        stock: 28, retail: 162.5, wholesale: 150
+        fitment: "Fortuner 2015–Present | Innova 2016–Present | Hilux 2015–Present",
+        stock: 28,
+        retail: 162.5,
+        wholesale: 150
     },
     {
         code: "17801-0Y040",
         type: "AIR",
         brand: "TOYOTA",
-        fitment: "Mirage 2013–2019, Sienta 2016–2019, Mirage G4 2013–2019, Vios/Yaris 2014–2019",
-        stock: 0, retail: 105, wholesale: 95
-    },
-    {
-        code: "17801-BZ100",
-        type: "AIR",
-        brand: "TOYOTA",
-        fitment: "Wigo 2014–2017, Agya 2013–2017",
-        stock: 20, retail: 111, wholesale: 93.75
+        fitment: "Mirage 2013–2019 | Sienta 2016–2019 | Vios/Yaris 2014–2019",
+        stock: 0,
+        retail: 105,
+        wholesale: 95
     }
 ];
 
-// LOAD SAVED EDITS
+// Load saved data
 if (localStorage.getItem("mc3inventory")) {
     inventory = JSON.parse(localStorage.getItem("mc3inventory"));
 }
@@ -128,7 +131,7 @@ function renderTable() {
     tbody.innerHTML = "";
 
     inventory.forEach((item, i) => {
-        let row = `
+        tbody.innerHTML += `
         <tr>
             <td>${item.code}</td>
             <td>${item.type}</td>
@@ -139,7 +142,6 @@ function renderTable() {
             <td><input type="number" value="${item.wholesale}" onchange="update(${i}, 'wholesale', this.value)"></td>
         </tr>
         `;
-        tbody.innerHTML += row;
     });
 }
 
@@ -149,17 +151,17 @@ function update(i, key, value) {
 
 function saveInventory() {
     localStorage.setItem("mc3inventory", JSON.stringify(inventory));
-    alert("Inventory saved!");
+    alert("Inventory saved successfully!");
 }
 
-// SEARCH
-document.getElementById("search").addEventListener("keyup", function () {
-    let filter = this.value.toUpperCase();
+// Search function
+document.getElementById("search").addEventListener("keyup", () => {
+    let filter = document.getElementById("search").value.toUpperCase();
     let rows = document.querySelectorAll("#inventoryTable tbody tr");
 
     rows.forEach(row => {
-        let text = row.innerText.toUpperCase();
-        row.style.display = text.includes(filter) ? "" : "none";
+        let txt = row.innerText.toUpperCase();
+        row.style.display = txt.includes(filter) ? "" : "none";
     });
 });
 
