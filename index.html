@@ -1,22 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MC3 Auto Parts – Inventory</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>MC3 AUTO PARTS Inventory</title>
+<style>
+    body {
+        font-family: Arial;
+        background: #111;
+        color: #fff;
+        padding: 20px;
+    }
+    h2 { margin-bottom: 10px; }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        background: #1b1b1b;
+    }
+    th, td {
+        border: 1px solid #333;
+        padding: 8px;
+        text-align: left;
+    }
+    th {
+        background: #333;
+        color: #fff;
+    }
+    input[type="text"], input[type="number"] {
+        width: 100%;
+        padding: 6px;
+        background: #222;
+        color: #fff;
+        border: 1px solid #444;
+    }
+    .save-btn {
+        background: #0f0;
+        padding: 8px 14px;
+        border: none;
+        cursor: pointer;
+        color: #000;
+        font-weight: bold;
+        border-radius: 5px;
+    }
+    #search {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        font-size: 15px;
+        background: #222;
+        border: 1px solid #444;
+        color: white;
+    }
+</style>
 </head>
-
 <body>
 
-<header>
-    <h1>MC3 AUTO PARTS</h1>
-    <p>Cabin Filter • Air Filter • OEM Quality</p>
-</header>
-
-<div class="search">
-    <input type="text" id="searchInput" placeholder="Search Code, Brand, Model, Type…">
-</div>
+<h2>MC3 AUTO PARTS — Editable Inventory</h2>
+<input type="text" id="search" placeholder="Search Code, Brand, Model, Type…">
 
 <table id="inventoryTable">
     <thead>
@@ -26,17 +66,105 @@
             <th>Brand</th>
             <th>Fitment</th>
             <th>Stock</th>
-            <th>Retail</th>
-            <th>Wholesale</th>
+            <th>Retail ₱</th>
+            <th>Wholesale ₱</th>
         </tr>
     </thead>
-    <tbody id="inventoryBody"></tbody>
+    <tbody id="tableBody">
+    </tbody>
 </table>
 
-<footer>
-    © 2025 MC3 AUTO PARTS – Direct Import
-</footer>
+<button class="save-btn" onclick="saveInventory()">SAVE CHANGES</button>
 
-<script src="script.js"></script>
+<script>
+// ---------------------------
+// INVENTORY DATA (EDIT HERE)
+// ---------------------------
+let inventory = [
+    {
+        code: "1500A608",
+        type: "AIR",
+        brand: "MITSUBISHI",
+        fitment: "Montero Sport / Pajero Sport III (2016–2021), Strada 2018–Present, L200/Triton 2016–Present",
+        stock: 46, retail: 150, wholesale: 130
+    },
+    {
+        code: "1500A617",
+        type: "AIR",
+        brand: "MITSUBISHI",
+        fitment: "Mirage G4 2012–2021, Mirage Hatchback 2012–2019",
+        stock: 20, retail: 98, wholesale: 90
+    },
+    {
+        code: "17801-0L040",
+        type: "AIR",
+        brand: "TOYOTA",
+        fitment: "Fortuner 2015–Present, Innova 2016–Present, Hilux 2015–Present",
+        stock: 28, retail: 162.5, wholesale: 150
+    },
+    {
+        code: "17801-0Y040",
+        type: "AIR",
+        brand: "TOYOTA",
+        fitment: "Mirage 2013–2019, Sienta 2016–2019, Mirage G4 2013–2019, Vios/Yaris 2014–2019",
+        stock: 0, retail: 105, wholesale: 95
+    },
+    {
+        code: "17801-BZ100",
+        type: "AIR",
+        brand: "TOYOTA",
+        fitment: "Wigo 2014–2017, Agya 2013–2017",
+        stock: 20, retail: 111, wholesale: 93.75
+    }
+];
+
+// LOAD SAVED EDITS
+if (localStorage.getItem("mc3inventory")) {
+    inventory = JSON.parse(localStorage.getItem("mc3inventory"));
+}
+
+function renderTable() {
+    const tbody = document.getElementById("tableBody");
+    tbody.innerHTML = "";
+
+    inventory.forEach((item, i) => {
+        let row = `
+        <tr>
+            <td>${item.code}</td>
+            <td>${item.type}</td>
+            <td>${item.brand}</td>
+            <td><input type="text" value="${item.fitment}" onchange="update(${i}, 'fitment', this.value)"></td>
+            <td><input type="number" value="${item.stock}" onchange="update(${i}, 'stock', this.value)"></td>
+            <td><input type="number" value="${item.retail}" onchange="update(${i}, 'retail', this.value)"></td>
+            <td><input type="number" value="${item.wholesale}" onchange="update(${i}, 'wholesale', this.value)"></td>
+        </tr>
+        `;
+        tbody.innerHTML += row;
+    });
+}
+
+function update(i, key, value) {
+    inventory[i][key] = value;
+}
+
+function saveInventory() {
+    localStorage.setItem("mc3inventory", JSON.stringify(inventory));
+    alert("Inventory saved!");
+}
+
+// SEARCH
+document.getElementById("search").addEventListener("keyup", function () {
+    let filter = this.value.toUpperCase();
+    let rows = document.querySelectorAll("#inventoryTable tbody tr");
+
+    rows.forEach(row => {
+        let text = row.innerText.toUpperCase();
+        row.style.display = text.includes(filter) ? "" : "none";
+    });
+});
+
+renderTable();
+</script>
+
 </body>
 </html>
