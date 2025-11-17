@@ -57,75 +57,62 @@
 </footer>
 
 <script>
-// ---------- default inventory (from your CSV) ----------
 const defaultInventory = [
-  {"code":"MR398288","type":"CABIN","brand":"MITSUBISHI","fitment":"(Lancer 2002-2007) (Outlander 2003-2006) (Grandis 2003-2011)","stock":10,"retail":136.5,"wholesale":126},
-  {"code":"87139-0N010","type":"CABIN","brand":"TOYOTA","fitment":"(Hiace Commuter 2004-present) (Hiace Grandia 2004-present) (GL Grandia Tourer)","stock":20,"retail":65,"wholesale":60},
-  {"code":"17801-0L040","type":"AIR","brand":"TOYOTA","fitment":"(Fortuner 2015–present) (Innova 2016–present) (Hilux 2015–present)","stock":28,"retail":162.5,"wholesale":150},
-  {"code":"17801-BZ100","type":"AIR","brand":"TOYOTA","fitment":"(Wigo 2014-2017) (Agya 2013-2017)","stock":20,"retail":111,"wholesale":93.75},
-  {"code":"1500A608","type":"AIR","brand":"MITSUBISHI","fitment":"(Montero 2016-2021) (Strada 2018-present) (L200/Triton 2016-present)","stock":46,"retail":150,"wholesale":130},
-  {"code":"17801-0Y040","type":"AIR","brand":"TOYOTA","fitment":"(Mirage 2013-2019) (Sienta 2016-2019) (Vios 2013-2019) (Yaris 2014-2019)","stock":0,"retail":105,"wholesale":95},
-  {"code":"1500A617","type":"AIR","brand":"MITSUBISHI","fitment":"(Mirage G4 2012-2021) (Mirage Hatchback 2012-2019)","stock":20,"retail":98,"wholesale":90},
-  {"code":"7850A002","type":"CABIN","brand":"MITSUBISHI","fitment":"(Mirage 2014–present) (Mirage G4 2014–present)","stock":10,"retail":77,"wholesale":65},
-  {"code":"7803A112","type":"CABIN","brand":"MITSUBISHI","fitment":"(Montero 2016–Up) (Strada 2015–2022) (L200 2015–2022)","stock":20,"retail":130,"wholesale":120},
-  {"code":"97133-2E210","type":"AIR","brand":"HYUNDAI","fitment":"(Accent 2011-2017) (Tucson 2006-2014) (Veloster 2011-2017) (Elantra 2006-2010) (i30 2007-2011) (Forte 2009-2013)","stock":10,"retail":98,"wholesale":84}
+{"code":"MR398288","type":"CABIN","brand":"MITSUBISHI","fitment":"(Lancer 2002-2007) (Outlander 2003-2006) (Grandis 2003-2011)","stock":10,"retail":136.5,"wholesale":126},
+{"code":"87139-0N010","type":"CABIN","brand":"TOYOTA","fitment":"(Hiace Commuter 2004-present) (Hiace Grandia 2004-present) (GL Grandia Tourer)","stock":20,"retail":65,"wholesale":60},
+{"code":"17801-0L040","type":"AIR","brand":"TOYOTA","fitment":"(Fortuner 2015–present) (Innova 2016–present) (Hilux 2015–present)","stock":28,"retail":162.5,"wholesale":150},
+{"code":"17801-BZ100","type":"AIR","brand":"TOYOTA","fitment":"(Wigo 2014-2017) (Agya 2013-2017)","stock":20,"retail":111,"wholesale":93.75},
+{"code":"1500A608","type":"AIR","brand":"MITSUBISHI","fitment":"(Montero 2016-2021) (Strada 2018-present) (L200/Triton 2016-present)","stock":46,"retail":150,"wholesale":130},
+{"code":"17801-0Y040","type":"AIR","brand":"TOYOTA","fitment":"(Mirage 2013-2019) (Sienta 2016-2019) (Vios 2013-2019) (Yaris 2014-2019)","stock":0,"retail":105,"wholesale":95},
+{"code":"1500A617","type":"AIR","brand":"MITSUBISHI","fitment":"(Mirage G4 2012-2021) (Mirage Hatchback 2012-2019)","stock":20,"retail":98,"wholesale":90},
+{"code":"7850A002","type":"CABIN","brand":"MITSUBISHI","fitment":"(Mirage 2014–present) (Mirage G4 2014–present)","stock":10,"retail":77,"wholesale":65},
+{"code":"7803A112","type":"CABIN","brand":"MITSUBISHI","fitment":"(Montero 2016–Up) (Strada 2015–2022) (L200 2015–2022)","stock":20,"retail":130,"wholesale":120},
+{"code":"97133-2E210","type":"AIR","brand":"HYUNDAI","fitment":"(Accent 2011-2017) (Tucson 2006-2014) (Veloster 2011-2017) (Elantra 2006-2010) (i30 2007-2011) (Forte 2009-2013)","stock":10,"retail":98,"wholesale":84}
 ];
 
-// load inventory (localStorage if exists, else default)
-function loadInventory() {
-  let raw = localStorage.getItem('mc3inventory_online');
-  if (raw) {
-    try { return JSON.parse(raw); } catch(e){ return defaultInventory.slice(); }
-  }
-  return defaultInventory.slice();
+function loadInv(){
+ let raw=localStorage.getItem('mc3inventory_online');
+ if(!raw) return defaultInventory;
+ try{return JSON.parse(raw);}catch{ return defaultInventory; }
 }
+let inventory = loadInv();
 
-let inventory = loadInventory();
-
-function formatRow(item) {
-  const low = (Number(item.stock) <= 5) ? `<span class="low">LOW</span>` : '';
+function formatRow(it){
+  let low = (Number(it.stock)<=5)?'<span class="low">LOW</span>':'';
   return `<tr>
-    <td>${item.code}</td>
-    <td>${item.type}</td>
-    <td>${item.brand}</td>
-    <td>${item.fitment}</td>
-    <td>${item.stock} ${low}</td>
-    <td>₱${item.retail}</td>
-    <td>₱${item.wholesale}</td>
-  </tr>`;
+  <td>${it.code}</td>
+  <td>${it.type}</td>
+  <td>${it.brand}</td>
+  <td>${it.fitment}</td>
+  <td>${it.stock} ${low}</td>
+  <td>₱${it.retail}</td>
+  <td>₱${it.wholesale}</td>`;
 }
 
-function renderPublic(items) {
-  const body = document.getElementById('publicBody');
-  body.innerHTML = items.map(formatRow).join('');
+function render(items){
+ document.getElementById("publicBody").innerHTML = items.map(formatRow).join("");
 }
 
-function applyFilters() {
-  const q = document.getElementById('searchPublic').value.trim().toLowerCase();
-  const type = document.getElementById('filterType').value;
-  const sort = document.getElementById('sortPublic').value;
-
-  let items = inventory.filter(it => {
-    if (type && it.type !== type) return false;
-    if (!q) return true;
-    const txt = (it.code + ' ' + it.brand + ' ' + it.type + ' ' + it.fitment).toLowerCase();
-    return txt.includes(q);
-  });
-
-  if (sort === 'code') items.sort((a,b)=> a.code.localeCompare(b.code));
-  if (sort === 'brand') items.sort((a,b)=> a.brand.localeCompare(b.brand));
-  if (sort === 'stock_desc') items.sort((a,b)=> Number(b.stock)-Number(a.stock));
-
-  renderPublic(items);
+function applyFilters(){
+ let q=document.getElementById("searchPublic").value.toLowerCase();
+ let type=document.getElementById("filterType").value;
+ let sort=document.getElementById("sortPublic").value;
+ let items=inventory.filter(it=>{
+  if(type && it.type!==type) return false;
+  return (it.code+" "+it.brand+" "+it.type+" "+it.fitment).toLowerCase().includes(q);
+ });
+ if(sort==="code") items.sort((a,b)=>a.code.localeCompare(b.code));
+ if(sort==="brand") items.sort((a,b)=>a.brand.localeCompare(b.brand));
+ if(sort==="stock_desc") items.sort((a,b)=>b.stock-a.stock);
+ render(items);
 }
 
-// event listeners
-document.getElementById('searchPublic').addEventListener('input', applyFilters);
-document.getElementById('filterType').addEventListener('change', applyFilters);
-document.getElementById('sortPublic').addEventListener('change', applyFilters);
+document.getElementById("searchPublic").oninput=applyFilters;
+document.getElementById("filterType").onchange=applyFilters;
+document.getElementById("sortPublic").onchange=applyFilters;
 
-// initial render
 applyFilters();
 </script>
+
 </body>
 </html>
