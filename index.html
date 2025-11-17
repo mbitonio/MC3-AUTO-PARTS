@@ -1,266 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>MC3 AUTO PARTS Inventory</title>
-
-<style>
-    body {
-        font-family: Arial;
-        background: #0f0f0f;
-        color: #fff;
-        padding: 20px;
-    }
-    h1, h3 { text-align: center; margin: 0; padding: 5px; }
-
-    #search {
-        width: 100%;
-        padding: 10px;
-        margin: 15px 0;
-        font-size: 16px;
-        background: #1e1e1e;
-        border: 1px solid #444;
-        color: #fff;
-        border-radius: 6px;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        background: #1b1b1b;
-        font-size: 14px;
-    }
-    th, td {
-        border: 1px solid #333;
-        padding: 8px;
-    }
-    th { background: #333; }
-
-    input[type="text"], input[type="number"] {
-        width: 100%;
-        padding: 5px;
-        background: #222;
-        border: 1px solid #555;
-        color: #fff;
-        border-radius: 4px;
-    }
-
-    .btn {
-        background: #00ff99;
-        color: #000;
-        border: none;
-        padding: 12px 18px;
-        font-weight: bold;
-        border-radius: 5px;
-        cursor: pointer;
-        margin-bottom: 15px;
-    }
-
-    .btn-red {
-        background: #ff4444;
-        color: #fff;
-        padding: 8px;
-        border-radius: 4px;
-        font-size: 14px;
-        cursor: pointer;
-    }
-</style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>MC3 AUTO PARTS — Inventory</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
+<header class="top">
+  <div>
+    <h1>MC3 AUTO PARTS</h1>
+    <p class="sub">Cabin • Air • Oil Filters — Quick Inventory</p>
+  </div>
+  <div class="actions">
+    <a class="btn" href="admin.html">Admin Login</a>
+  </div>
+</header>
 
-<h1>MC3 AUTO PARTS</h1>
-<h3>Inventory System • Editable • Auto-Save</h3>
+<section class="container">
+  <div class="toolbar">
+    <input id="searchPublic" placeholder="Search code / brand / type / fitment…" />
+    <select id="filterType">
+      <option value="">All Types</option>
+      <option value="AIR">AIR</option>
+      <option value="CABIN">CABIN</option>
+      <option value="OIL">OIL</option>
+    </select>
+    <select id="sortPublic">
+      <option value="">Sort — None</option>
+      <option value="code">Sort: Code (A→Z)</option>
+      <option value="brand">Sort: Brand (A→Z)</option>
+      <option value="stock_desc">Sort: Stock (High→Low)</option>
+    </select>
+  </div>
 
-<input type="text" id="search" placeholder="Search Code, Fitment, Type, Brand…">
-
-<button class="btn" onclick="addItem()">ADD ITEM</button>
-<button class="btn" onclick="saveInventory()">SAVE CHANGES</button>
-
-<table id="inventoryTable">
-    <thead>
+  <div id="tableWrap" class="tableWrap">
+    <table id="publicTable">
+      <thead>
         <tr>
-            <th>Code</th>
-            <th>Type</th>
-            <th>Brand</th>
-            <th>Fitment</th>
-            <th>Stock</th>
-            <th>Retail ₱</th>
-            <th>Wholesale ₱</th>
-            <th>Delete</th>
+          <th>Code</th>
+          <th>Type</th>
+          <th>Brand</th>
+          <th>Fitment</th>
+          <th>Stock</th>
+          <th>Retail ₱</th>
+          <th>Wholesale ₱</th>
         </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-</table>
+      </thead>
+      <tbody id="publicBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer class="footer">
+  © MC3 AUTO PARTS — Direct Import • High Quality • Low Price
+</footer>
 
 <script>
-// -------------------------------------------
-//  FULL INVENTORY (UPDATED with CSV content)
-// -------------------------------------------
-
-let inventory = [
-    {
-        code: "MR398288",
-        type: "CABIN",
-        brand: "MITSUBISHI",
-        fitment: "(Lancer 2002-2007) (Outlander 2003-2006) (Grandis 2003-2011)",
-        stock: 10,
-        retail: 136.5,
-        wholesale: 126
-    },
-    {
-        code: "87139-0N010",
-        type: "CABIN",
-        brand: "TOYOTA",
-        fitment: "(Hiace Commuter 2004-present) (Hiace Grandia 2004-present) (GL Grandia Tourer)",
-        stock: 20,
-        retail: 65,
-        wholesale: 60
-    },
-    {
-        code: "17801-0L040",
-        type: "AIR",
-        brand: "TOYOTA",
-        fitment: "(Fortuner 2015–present) (Innova 2016–present) (Hilux 2015–present)",
-        stock: 28,
-        retail: 162.5,
-        wholesale: 150
-    },
-    {
-        code: "17801-BZ100",
-        type: "AIR",
-        brand: "TOYOTA",
-        fitment: "(Wigo 2014-2017) (Agya 2013-2017)",
-        stock: 20,
-        retail: 111,
-        wholesale: 93.75
-    },
-    {
-        code: "1500A608",
-        type: "AIR",
-        brand: "MITSUBISHI",
-        fitment: "(Montero 2016-2021) (Strada 2018-present) (L200/Triton 2016-present)",
-        stock: 46,
-        retail: 150,
-        wholesale: 130
-    },
-    {
-        code: "17801-0Y040",
-        type: "AIR",
-        brand: "TOYOTA",
-        fitment: "(Mirage 2013-2019) (Sienta 2016-2019) (Vios 2013-2019) (Yaris 2014-2019)",
-        stock: 0,
-        retail: 105,
-        wholesale: 95
-    },
-    {
-        code: "1500A617",
-        type: "AIR",
-        brand: "MITSUBISHI",
-        fitment: "(Mirage G4 2012-2021) (Mirage Hatchback 2012-2019)",
-        stock: 20,
-        retail: 98,
-        wholesale: 90
-    },
-    {
-        code: "7850A002",
-        type: "CABIN",
-        brand: "MITSUBISHI",
-        fitment: "(Mirage 2014–present) (Mirage G4 2014–present)",
-        stock: 10,
-        retail: 77,
-        wholesale: 65
-    },
-    {
-        code: "7803A112",
-        type: "CABIN",
-        brand: "MITSUBISHI",
-        fitment: "(Montero 2016–Up) (Strada 2015–2022) (L200 2015–2022)",
-        stock: 20,
-        retail: 130,
-        wholesale: 120
-    },
-    {
-        code: "97133-2E210",
-        type: "AIR",
-        brand: "HYUNDAI",
-        fitment: "(Accent 2011-2017) (Tucson 2006-2014) (Veloster 2011-2017) (Elantra 2006-2010) (i30 2007-2011) (Forte 2009-2013)",
-        stock: 10,
-        retail: 98,
-        wholesale: 84
-    }
+// ---------- default inventory (from your CSV) ----------
+const defaultInventory = [
+  {"code":"MR398288","type":"CABIN","brand":"MITSUBISHI","fitment":"(Lancer 2002-2007) (Outlander 2003-2006) (Grandis 2003-2011)","stock":10,"retail":136.5,"wholesale":126},
+  {"code":"87139-0N010","type":"CABIN","brand":"TOYOTA","fitment":"(Hiace Commuter 2004-present) (Hiace Grandia 2004-present) (GL Grandia Tourer)","stock":20,"retail":65,"wholesale":60},
+  {"code":"17801-0L040","type":"AIR","brand":"TOYOTA","fitment":"(Fortuner 2015–present) (Innova 2016–present) (Hilux 2015–present)","stock":28,"retail":162.5,"wholesale":150},
+  {"code":"17801-BZ100","type":"AIR","brand":"TOYOTA","fitment":"(Wigo 2014-2017) (Agya 2013-2017)","stock":20,"retail":111,"wholesale":93.75},
+  {"code":"1500A608","type":"AIR","brand":"MITSUBISHI","fitment":"(Montero 2016-2021) (Strada 2018-present) (L200/Triton 2016-present)","stock":46,"retail":150,"wholesale":130},
+  {"code":"17801-0Y040","type":"AIR","brand":"TOYOTA","fitment":"(Mirage 2013-2019) (Sienta 2016-2019) (Vios 2013-2019) (Yaris 2014-2019)","stock":0,"retail":105,"wholesale":95},
+  {"code":"1500A617","type":"AIR","brand":"MITSUBISHI","fitment":"(Mirage G4 2012-2021) (Mirage Hatchback 2012-2019)","stock":20,"retail":98,"wholesale":90},
+  {"code":"7850A002","type":"CABIN","brand":"MITSUBISHI","fitment":"(Mirage 2014–present) (Mirage G4 2014–present)","stock":10,"retail":77,"wholesale":65},
+  {"code":"7803A112","type":"CABIN","brand":"MITSUBISHI","fitment":"(Montero 2016–Up) (Strada 2015–2022) (L200 2015–2022)","stock":20,"retail":130,"wholesale":120},
+  {"code":"97133-2E210","type":"AIR","brand":"HYUNDAI","fitment":"(Accent 2011-2017) (Tucson 2006-2014) (Veloster 2011-2017) (Elantra 2006-2010) (i30 2007-2011) (Forte 2009-2013)","stock":10,"retail":98,"wholesale":84}
 ];
 
-// Load saved version if exists
-if (localStorage.getItem("mc3inventory")) {
-    inventory = JSON.parse(localStorage.getItem("mc3inventory"));
+// load inventory (localStorage if exists, else default)
+function loadInventory() {
+  let raw = localStorage.getItem('mc3inventory_online');
+  if (raw) {
+    try { return JSON.parse(raw); } catch(e){ return defaultInventory.slice(); }
+  }
+  return defaultInventory.slice();
 }
 
-// Render table
-function renderTable() {
-    const tbody = document.getElementById("tableBody");
-    tbody.innerHTML = "";
+let inventory = loadInventory();
 
-    inventory.forEach((item, i) => {
-        tbody.innerHTML += `
-        <tr>
-            <td><input value="${item.code}" onchange="update(${i}, 'code', this.value)"></td>
-            <td><input value="${item.type}" onchange="update(${i}, 'type', this.value)"></td>
-            <td><input value="${item.brand}" onchange="update(${i}, 'brand', this.value)"></td>
-            <td><input value="${item.fitment}" onchange="update(${i}, 'fitment', this.value)"></td>
-            <td><input type="number" value="${item.stock}" onchange="update(${i}, 'stock', this.value)"></td>
-            <td><input type="number" value="${item.retail}" onchange="update(${i}, 'retail', this.value)"></td>
-            <td><input type="number" value="${item.wholesale}" onchange="update(${i}, 'wholesale', this.value)"></td>
-            <td><button class="btn-red" onclick="deleteItem(${i})">X</button></td>
-        </tr>`;
-    });
+function formatRow(item) {
+  const low = (Number(item.stock) <= 5) ? `<span class="low">LOW</span>` : '';
+  return `<tr>
+    <td>${item.code}</td>
+    <td>${item.type}</td>
+    <td>${item.brand}</td>
+    <td>${item.fitment}</td>
+    <td>${item.stock} ${low}</td>
+    <td>₱${item.retail}</td>
+    <td>₱${item.wholesale}</td>
+  </tr>`;
 }
 
-// Update field
-function update(i, key, value) {
-    inventory[i][key] = value;
+function renderPublic(items) {
+  const body = document.getElementById('publicBody');
+  body.innerHTML = items.map(formatRow).join('');
 }
 
-// Add new item
-function addItem() {
-    inventory.push({
-        code: "",
-        type: "",
-        brand: "",
-        fitment: "",
-        stock: 0,
-        retail: 0,
-        wholesale: 0,
-    });
-    renderTable();
+function applyFilters() {
+  const q = document.getElementById('searchPublic').value.trim().toLowerCase();
+  const type = document.getElementById('filterType').value;
+  const sort = document.getElementById('sortPublic').value;
+
+  let items = inventory.filter(it => {
+    if (type && it.type !== type) return false;
+    if (!q) return true;
+    const txt = (it.code + ' ' + it.brand + ' ' + it.type + ' ' + it.fitment).toLowerCase();
+    return txt.includes(q);
+  });
+
+  if (sort === 'code') items.sort((a,b)=> a.code.localeCompare(b.code));
+  if (sort === 'brand') items.sort((a,b)=> a.brand.localeCompare(b.brand));
+  if (sort === 'stock_desc') items.sort((a,b)=> Number(b.stock)-Number(a.stock));
+
+  renderPublic(items);
 }
 
-// Delete row
-function deleteItem(i) {
-    if (confirm("Delete this item?")) {
-        inventory.splice(i, 1);
-        renderTable();
-    }
-}
+// event listeners
+document.getElementById('searchPublic').addEventListener('input', applyFilters);
+document.getElementById('filterType').addEventListener('change', applyFilters);
+document.getElementById('sortPublic').addEventListener('change', applyFilters);
 
-// Save to browser
-function saveInventory() {
-    localStorage.setItem("mc3inventory", JSON.stringify(inventory));
-    alert("Saved!");
-}
-
-// SEARCH — FIXED VERSION
-document.getElementById("search").addEventListener("input", () => {
-    let filter = document.getElementById("search").value.toLowerCase();
-    let rows = document.querySelectorAll("#inventoryTable tbody tr");
-
-    rows.forEach(row => {
-        let text = row.innerText.toLowerCase();
-        row.style.display = text.includes(filter) ? "" : "none";
-    });
-});
-
-renderTable();
+// initial render
+applyFilters();
 </script>
-
 </body>
 </html>
