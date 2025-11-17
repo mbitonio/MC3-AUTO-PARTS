@@ -1,106 +1,211 @@
-<!doctype html>
-<html>
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>MC3 Admin Panel</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<header class="top">
-  <div>
-    <h1>MC3 ADMIN PANEL</h1>
-    <p class="sub">Editable Inventory — Import / Export / Save</p>
-  </div>
-  <div class="actions">
-    <a class="btn" href="index.html">View Public</a>
-  </div>
-</header>
+    // continue from previous fetch...
+    fetch('inventory.json')
+      .then(r => r.json())
+      .then(j => { inventory = j; saveToLocal(false); renderAdmin(); })
+      .catch(e => { /* no inventory.json found, use default */ renderAdmin(); });
+  }
+}
 
-<section class="container grid">
-  <div class="left">
-    <div class="toolRow">
-      <input id="searchAdmin" placeholder="Search code / brand / fitment / type…" />
-      <select id="sortAdmin">
-        <option value="">Sort — None</option>
-        <option value="code">Code A→Z</option>
-        <option value="brand">Brand A→Z</option>
-        <option value="type">Type A→Z</option>
-        <option value="stock_desc">Stock High→Low</option>
-      </select>
-    </div>
+loadFromStorage();
 
-    <div class="toolRow">
-      <button class="btn" onclick="addItem()">Add Item</button>
-      <button class="btn" onclick="saveToLocal()">Save (local)</button>
-      <button class="btn" onclick="downloadJSON()">Download JSON</button>
-      <button class="btn" onclick="exportXLSX()">Export XLSX</button>
-      <label class="btn" for="fileImport">Import .xlsx</label>
-      <input id="fileImport" type="file" accept=".xlsx,.xls" style="display:none" />
-      <button class="btn" onclick="loadDefault()">Load Default (reset)</button>
-    </div>
+// ---------- RENDER ADMIN TABLE ----------
+function renderAdmin() {
+  const body = document.getElementById('adminBody');
+  body.innerHTML = '';
+  inventory.forEach((it, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(it.code)}</td>
+      <td>${escapeHtml(it.type)}</td>
+      <td>${escapeHtml(it.brand)}</td>
+      <td class="fitment-cell">${escapeHtml(it.fitment)}</td>
+      <td>${escapeHtml(String(it.stock))}</td>
+      <td>₱${escapeHtml(String(it.retail))}</td>
+      <td>₱${escapeHtml(String(it.wholesale))}</td>
+      <td><button class="btn btn-red" onclick="selectRow(${idx})">Edit</button></td>
+    `;
+    body.appendChild(tr);
+  });
+}
 
-    <div class="tableWrap">
-      <table id="adminTable">
-        <thead>
-          <tr>
-            <th>Code</th><th>Type</th><th>Brand</th><th>Fitment</th><th>Stock</th><th>Retail</th><th>Wholesale</th><th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="adminBody"></tbody>
-      </table>
-    </div>
+// ---------- SAFETY: escape HTML ----------
+function escapeHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/[&<>"'`]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c]));
+}
 
-  </div>
+// ---------- SELECT ROW FOR EDIT ----------
+function selectRow(i) {
+  editingIndex = i;
+  const it = inventory[i];
+  document.getElementById('editorForm').style.display = 'block';
+  document.getElementById('editorNotice').style.display = 'none';
+  document.getElementById('e_code').value = it.code || '';
+  document.getElementById('e_type').value = it.type || '';
+  document.getElementById('e_brand').value = it.brand || '';
+  document.getElementById('e_fitment').value = it.fitment || '';
+  document.getElementById('e_stock').value = it.stock || 0;
+  document.getElementById('e_retail').value = it.retail || 0;
+  document.getElementById('e_wholesale').value = it.wholesale || 0;
+}
 
-  <aside class="right" id="editorPanel">
-    <h3>Editor</h3>
-    <div id="editorNotice">Select a row to edit or Add New.</div>
-    <div id="editorForm" style="display:none">
-      <label>Code</label><input id="e_code" />
-      <label>Type</label><input id="e_type" />
-      <label>Brand</label><input id="e_brand" />
-      <label>Fitment</label><textarea id="e_fitment"></textarea>
-      <label>Stock</label><input id="e_stock" type="number" />
-      <label>Retail ₱</label><input id="e_retail" type="number" />
-      <label>Wholesale ₱</label><input id="e_wholesale" type="number" />
-      <div style="margin-top:10px">
-        <button class="btn" id="saveRow">Save Row</button>
-        <button class="btn btn-red" id="delRow">Delete Row</button>
-      </div>
-    </div>
-  </aside>
-</section>
+// ---------- SAVE ROW FROM EDITOR ----------
+document.getElementById('saveRow').addEventListener('click', () => {
+  if (editingIndex === null) return alert('No row selected');
+  const idx = editingIndex;
+  inventory[idx].code = document.getElementById('e_code').value.trim();
+  inventory[idx].type = document.getElementById('e_type').value.trim();
+  inventory[idx].brand = document.getElementById('e_brand').value.trim();
+  inventory[idx].fitment = document.getElementById('e_fitment').value.trim();
+  inventory[idx].stock = Number(document.getElementById('e_stock').value) || 0;
+  inventory[idx].retail = Number(document.getElementById('e_retail').value) || 0;
+  inventory[idx].wholesale = Number(document.getElementById('e_wholesale').value) || 0;
+  editingIndex = null;
+  document.getElementById('editorForm').style.display = 'none';
+  document.getElementById('editorNotice').style.display = 'block';
+  renderAdmin();
+  saveToLocal();
+});
 
-<footer class="footer">MC3 AUTO PARTS — Admin Panel</footer>
+// ---------- DELETE ROW ----------
+document.getElementById('delRow').addEventListener('click', () => {
+  if (editingIndex === null) return;
+  if (!confirm('Delete this row?')) return;
+  inventory.splice(editingIndex, 1);
+  editingIndex = null;
+  document.getElementById('editorForm').style.display = 'none';
+  document.getElementById('editorNotice').style.display = 'block';
+  renderAdmin();
+  saveToLocal();
+});
 
-<!-- XLSX library -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+// ---------- ADD ITEM ----------
+function addItem() {
+  const newItem = { code:'', type:'', brand:'', fitment:'', stock:0, retail:0, wholesale:0 };
+  inventory.unshift(newItem); // add to top
+  renderAdmin();
+  selectRow(0);
+  saveToLocal();
+}
 
-<script>
-// --------------------- CORE ---------------------
-const STORAGE_KEY = 'mc3inventory_online';
-let inventory = [];
-let editingIndex = null;
+// ---------- SAVE TO LOCAL (and optionally re-render) ----------
+function saveToLocal(showAlert=true) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory));
+  if (showAlert) alert('Saved to browser storage.');
+}
 
-// default inventory (same as public default)
-const defaultInventory = [
-  {"code":"MR398288","type":"CABIN","brand":"MITSUBISHI","fitment":"(Lancer 2002-2007) (Outlander 2003-2006) (Grandis 2003-2011)","stock":10,"retail":136.5,"wholesale":126},
-  {"code":"87139-0N010","type":"CABIN","brand":"TOYOTA","fitment":"(Hiace Commuter 2004-present) (Hiace Grandia 2004-present) (GL Grandia Tourer)","stock":20,"retail":65,"wholesale":60},
-  {"code":"17801-0L040","type":"AIR","brand":"TOYOTA","fitment":"(Fortuner 2015–present) (Innova 2016–present) (Hilux 2015–present)","stock":28,"retail":162.5,"wholesale":150},
-  {"code":"17801-BZ100","type":"AIR","brand":"TOYOTA","fitment":"(Wigo 2014-2017) (Agya 2013-2017)","stock":20,"retail":111,"wholesale":93.75},
-  {"code":"1500A608","type":"AIR","brand":"MITSUBISHI","fitment":"(Montero 2016-2021) (Strada 2018-present) (L200/Triton 2016-present)","stock":46,"retail":150,"wholesale":130},
-  {"code":"17801-0Y040","type":"AIR","brand":"TOYOTA","fitment":"(Mirage 2013-2019) (Sienta 2016-2019) (Vios 2013-2019) (Yaris 2014-2019)","stock":0,"retail":105,"wholesale":95},
-  {"code":"1500A617","type":"AIR","brand":"MITSUBISHI","fitment":"(Mirage G4 2012-2021) (Mirage Hatchback 2012-2019)","stock":20,"retail":98,"wholesale":90},
-  {"code":"7850A002","type":"CABIN","brand":"MITSUBISHI","fitment":"(Mirage 2014–present) (Mirage G4 2014–present)","stock":10,"retail":77,"wholesale":65},
-  {"code":"7803A112","type":"CABIN","brand":"MITSUBISHI","fitment":"(Montero 2016–Up) (Strada 2015–2022) (L200 2015–2022)","stock":20,"retail":130,"wholesale":120},
-  {"code":"97133-2E210","type":"AIR","brand":"HYUNDAI","fitment":"(Accent 2011-2017) (Tucson 2006-2014) (Veloster 2011-2017) (Elantra 2006-2010) (i30 2007-2011) (Forte 2009-2013)","stock":10,"retail":98,"wholesale":84}
-];
+// ---------- DOWNLOAD JSON (for manual upload to GitHub) ----------
+function downloadJSON() {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(inventory, null, 2));
+  const a = document.createElement('a');
+  a.href = dataStr;
+  a.download = 'inventory.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
 
-function loadFromStorage() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw) {
-    try { inventory = JSON.parse(raw); return; } catch(e){ inventory = defaultInventory.slice(); }
-  } else {
-    // also try to fetch inventory.json if uploaded to repo root (optional)
-    fetch
+// ---------- EXPORT XLSX using SheetJS ----------
+function exportXLSX() {
+  /* create worksheet from inventory */
+  const ws_data = [
+    ['code','type','brand','fitment','stock','retail','wholesale']
+  ];
+  inventory.forEach(it => ws_data.push([it.code, it.type, it.brand, it.fitment, it.stock, it.retail, it.wholesale]));
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
+  XLSX.writeFile(wb, 'mc3_inventory.xlsx');
+}
+
+// ---------- IMPORT XLSX ----------
+document.getElementById('fileImport').addEventListener('change', (evt) => {
+  const f = evt.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = (e) => {
+    const data = new Uint8Array(e.target.result);
+    const wb = XLSX.read(data, {type:'array'});
+    const first = wb.Sheets[wb.SheetNames[0]];
+    const arr = XLSX.utils.sheet_to_json(first, {header:1, defval:''});
+    // expect header row
+    const header = arr[0].map(h => String(h).toLowerCase());
+    const out = [];
+    for (let i=1;i<arr.length;i++) {
+      if (!arr[i] || arr[i].length===0) continue;
+      const row = arr[i];
+      const obj = {
+        code: row[header.indexOf('code')] || '',
+        type: row[header.indexOf('type')] || '',
+        brand: row[header.indexOf('brand')] || '',
+        fitment: row[header.indexOf('fitment')] || '',
+        stock: Number(row[header.indexOf('stock')] || 0),
+        retail: Number(row[header.indexOf('retail')] || 0),
+        wholesale: Number(row[header.indexOf('wholesale')] || 0)
+      };
+      out.push(obj);
+    }
+    if (out.length>0) {
+      if (confirm('Replace inventory with imported file? OK = replace, Cancel = append')) {
+        inventory = out;
+      } else {
+        inventory = out.concat(inventory);
+      }
+      renderAdmin();
+      saveToLocal();
+      alert('Import complete: ' + out.length + ' rows');
+    } else alert('No rows found in file.');
+  };
+  r.readAsArrayBuffer(f);
+});
+
+// ---------- SORT & SEARCH (admin) ----------
+document.getElementById('searchAdmin').addEventListener('input', applyAdminFilters);
+document.getElementById('sortAdmin').addEventListener('change', applyAdminFilters);
+
+function applyAdminFilters() {
+  const q = document.getElementById('searchAdmin').value.trim().toLowerCase();
+  const sort = document.getElementById('sortAdmin').value;
+  let items = inventory.filter(it => {
+    if (!q) return true;
+    const txt = (it.code + ' ' + it.brand + ' ' + it.type + ' ' + it.fitment).toLowerCase();
+    return txt.includes(q);
+  });
+  if (sort === 'code') items.sort((a,b)=> a.code.localeCompare(b.code));
+  if (sort === 'brand') items.sort((a,b)=> a.brand.localeCompare(b.brand));
+  if (sort === 'type') items.sort((a,b)=> a.type.localeCompare(b.type));
+  if (sort === 'stock_desc') items.sort((a,b)=> Number(b.stock)-Number(a.stock));
+  // render filtered list to table body
+  const body = document.getElementById('adminBody');
+  body.innerHTML = '';
+  items.forEach((it, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(it.code)}</td>
+      <td>${escapeHtml(it.type)}</td>
+      <td>${escapeHtml(it.brand)}</td>
+      <td class="fitment-cell">${escapeHtml(it.fitment)}</td>
+      <td>${escapeHtml(String(it.stock))}</td>
+      <td>₱${escapeHtml(String(it.retail))}</td>
+      <td>₱${escapeHtml(String(it.wholesale))}</td>
+      <td><button class="btn" onclick="selectRow(${inventory.indexOf(it)})">Edit</button></td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+// ---------- LOAD DEFAULT ----------
+function loadDefault() {
+  if (!confirm('Load default inventory and overwrite current?')) return;
+  inventory = defaultInventory.slice();
+  renderAdmin();
+  saveToLocal();
+  alert('Default inventory loaded.');
+}
+
+// ---------- INITIAL RENDER ----------
+renderAdmin();
+
+</script>
+</body>
+</html>
